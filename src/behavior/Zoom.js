@@ -37,22 +37,25 @@
  * @see pv.Mark#scale
  * @param {number} speed
  */
-pv.Behavior.zoom = function(speed) {
+pv.Behavior.zoom = function(speedx, speedy) {
   var bound; // whether to bound to the panel
 
-  if (!arguments.length) speed = 1 / 48;
+  if (!arguments.length) speedx = 1 / 48;
+  if (arguments.length != 2) speedy = 1 / 48;
 
   /** @private */
   function mousewheel() {
     var v = this.mouse(),
-        k = pv.event.wheel * speed,
+        k = pv.event.wheel * speedx,
+        f = pv.event.wheel * speedy;
         m = this.transform().translate(v.x, v.y)
-            .scale((k < 0) ? (1e3 / (1e3 - k)) : ((1e3 + k) / 1e3))
+            .scale((k < 0) ? (1e3 / (1e3 - k)) : ((1e3 + k) / 1e3),
+                   (f < 0) ? (1e3 / (1e3 - f)) : ((1e3 + f) / 1e3))
             .translate(-v.x, -v.y);
     if (bound) {
       m.k = Math.max(1, m.k);
       m.x = Math.max((1 - m.k) * this.width(), Math.min(0, m.x));
-      m.y = Math.max((1 - m.k) * this.height(), Math.min(0, m.y));
+      m.y = Math.max((1 - m.f) * this.height(), Math.min(0, m.y));
     }
     this.transform(m).render();
     pv.Mark.dispatch("zoom", this.scene, this.index);
