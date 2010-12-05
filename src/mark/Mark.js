@@ -288,6 +288,12 @@ pv.Mark.prototype.index = -1;
 pv.Mark.prototype.scale = 1;
 
 /**
+ * @type number
+ * @see pv.Panel#transform
+ */
+pv.Mark.prototype.scaley = 1;
+
+/**
  * @private The scene graph. The scene graph is an array of objects; each object
  * (or "node") corresponds to an instance of this mark and an element in the
  * data array. The scene graph can be traversed to lookup previously-evaluated
@@ -725,16 +731,17 @@ pv.Mark.prototype.render = function() {
   }
 
   /** @private */
-  function render(mark, depth, scale) {
-    mark.scale = scale;
+  function render(mark, depth, scalex, scaley) {
+    mark.scale = scalex;
+    mark.scaley = scaley;
     if (depth < indexes.length) {
       stack.unshift(null);
       if (mark.hasOwnProperty("index")) {
-        renderInstance(mark, depth, scale);
+        renderInstance(mark, depth, scalex, scaley);
       } else {
         for (var i = 0, n = mark.scene.length; i < n; i++) {
           mark.index = i;
-          renderInstance(mark, depth, scale);
+          renderInstance(mark, depth, scalex, scaley);
         }
         delete mark.index;
       }
@@ -749,10 +756,12 @@ pv.Mark.prototype.render = function() {
        * build phase are simply translated into SVG. The update phase is
        * decoupled (see pv.Scene) to allow different rendering engines.
        */
-      pv.Scene.scale = scale;
+      pv.Scene.scale = scalex;
+      pv.Scene.scaley = scaley;
       pv.Scene.updateAll(mark.scene);
     }
     delete mark.scale;
+    delete mark.scaley;
   }
 
   /**
@@ -767,7 +776,7 @@ pv.Mark.prototype.render = function() {
    * any preceding children, so as to allow property chaining. This is
    * consistent with first-pass rendering.
    */
-  function renderInstance(mark, depth, scale) {
+  function renderInstance(mark, depth, scalex, scaley) {
     var s = mark.scene[mark.index], i;
     if (s.visible) {
       var childIndex = indexes[depth],
@@ -781,10 +790,10 @@ pv.Mark.prototype.render = function() {
       /* Set current child scene, if necessary. */
       stack[0] = s.data;
       if (child.scene) {
-        render(child, depth + 1, scale * s.transform.k);
+        render(child, depth + 1, scalex * s.transform.k, scaley * s.transform.f);
       } else {
         child.scene = s.children[childIndex];
-        render(child, depth + 1, scale * s.transform.k);
+        render(child, depth + 1, scalex * s.transform.k, scaley * s.transform.f);
         delete child.scene;
       }
 
@@ -805,7 +814,7 @@ pv.Mark.prototype.render = function() {
   this.context(
       parent ? parent.scene : undefined,
       parent ? parent.index : -1,
-      function() { render(this.root, 0, 1); });
+      function() { render(this.root, 0, 1, 1); });
 };
 
 /** @private Stores the current data stack. */
@@ -1167,10 +1176,12 @@ pv.Mark.prototype.context = function(scene, index, f) {
     } while (mark = mark.parent);
 
     /* Set ancestors' scale; requires top-down. */
-    for (var i = ancestors.length - 1, k = 1; i > 0; i--) {
+    for (var i = ancestors.length - 1, k = 1, f = 1; i > 0; i--) {
       mark = ancestors[i];
       mark.scale = k;
+      mark.scaley = f;
       k *= mark.scene[mark.index].transform.k;
+      f *= mark.scene[mark.index].transform.f;
     }
 
     /* Set children's scene and scale. */
@@ -1178,6 +1189,7 @@ pv.Mark.prototype.context = function(scene, index, f) {
       mark = that.children[i];
       mark.scene = that.scene[that.index].children[i];
       mark.scale = k;
+      mark.scaley = f;
     }
   }
 
@@ -1192,6 +1204,7 @@ pv.Mark.prototype.context = function(scene, index, f) {
       mark = that.children[i];
       delete mark.scene;
       delete mark.scale;
+      delete mark.scaley;
     }
 
     /* Reset ancestors. */
@@ -1201,6 +1214,7 @@ pv.Mark.prototype.context = function(scene, index, f) {
       if (mark.parent) {
         delete mark.scene;
         delete mark.scale;
+        delete mark.scaley;
       }
       delete mark.index;
     } while (mark = mark.parent);

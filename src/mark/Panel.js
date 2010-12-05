@@ -173,7 +173,10 @@ pv.Panel.prototype.buildInstance = function(s) {
    * default index as we recurse into child marks; it will be reset to the
    * current index when the next panel instance is built.
    */
-  var scale = this.scale * s.transform.k, child, n = this.children.length;
+  var scalex = this.scale * s.transform.k,
+      scaley = this.scaley * s.transform.f,
+      child,
+      n = this.children.length;
   pv.Mark.prototype.index = -1;
 
   /*
@@ -185,7 +188,8 @@ pv.Panel.prototype.buildInstance = function(s) {
   for (var i = 0; i < n; i++) {
     child = this.children[i];
     child.scene = s.children[i]; // possibly undefined
-    child.scale = scale;
+    child.scale = scalex;
+    child.scaley = scaley
     child.build();
   }
 
@@ -200,6 +204,7 @@ pv.Panel.prototype.buildInstance = function(s) {
     s.children[i] = child.scene;
     delete child.scene;
     delete child.scale;
+    delete child.scaley;
   }
 
   /* Delete any expired child scenes. */
