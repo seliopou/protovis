@@ -47,7 +47,7 @@ pv.Behavior.pan = function(speedx, speedy) {
       bound; // whether to bound to the panel
 
   if (!arguments.length) speedx = 1;
-  if (arguments.length != 2) speedy = 1;
+  if (arguments.length != 2) speedy = speedx;
 
   /** @private */
   function mousedown() {

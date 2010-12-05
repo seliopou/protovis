@@ -41,7 +41,7 @@ pv.Behavior.zoom = function(speedx, speedy) {
   var bound; // whether to bound to the panel
 
   if (!arguments.length) speedx = 1 / 48;
-  if (arguments.length != 2) speedy = 1 / 48;
+  if (arguments.length != 2) speedy = speedy;
 
   /** @private */
   function mousewheel() {
