@@ -37,13 +37,17 @@
  * @see pv.Behavior.zoom
  * @see pv.Panel#transform
  */
-pv.Behavior.pan = function() {
+pv.Behavior.pan = function(speedx, speedy) {
   var scene, // scene context
       index, // scene context
       m1, // transformation matrix at the start of panning
       v1, // mouse location at the start of panning
-      k, // inverse scale
+      k, // inverse x scale
+      f, // inverse y scale
       bound; // whether to bound to the panel
+
+  if (!arguments.length) speedx = 1;
+  if (arguments.length != 2) speedy = 1;
 
   /** @private */
   function mousedown() {
@@ -52,10 +56,11 @@ pv.Behavior.pan = function() {
     v1 = pv.vector(pv.event.pageX, pv.event.pageY);
     m1 = this.transform();
     k = 1 / (m1.k * this.scale);
+    f = 1 / (m1.f * this.scale);
     if (bound) {
       bound = {
         x: (1 - m1.k) * this.width(),
-        y: (1 - m1.k) * this.height()
+        y: (1 - m1.f) * this.height()
       };
     }
   }
@@ -64,8 +69,8 @@ pv.Behavior.pan = function() {
   function mousemove() {
     if (!scene) return;
     scene.mark.context(scene, index, function() {
-        var x = (pv.event.pageX - v1.x) * k,
-            y = (pv.event.pageY - v1.y) * k,
+        var x = (pv.event.pageX - v1.x) * k * speedx,
+            y = (pv.event.pageY - v1.y) * f * speedy,
             m = m1.translate(x, y);
         if (bound) {
           m.x = Math.max(bound.x, Math.min(0, m.x));
