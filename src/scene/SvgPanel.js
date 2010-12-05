@@ -62,7 +62,7 @@ pv.SvgScene.panel = function(scenes) {
     for (var j = 0; j < s.children.length; j++) {
       s.children[j].$g = e = this.expect(e, "g", {
           "transform": "translate(" + x + "," + y + ")"
-              + (t.k != 1 ? " scale(" + t.k + ")" : "")
+              + (t.k != 1 || t.f != 1 ? " scale(" + t.k + ", " + t.f + ")" : "")
         });
       this.updateAll(s.children[j]);
       if (!e.parentNode) g.appendChild(e);
