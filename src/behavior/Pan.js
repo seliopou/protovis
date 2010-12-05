@@ -56,7 +56,7 @@ pv.Behavior.pan = function(speedx, speedy) {
     v1 = pv.vector(pv.event.pageX, pv.event.pageY);
     m1 = this.transform();
     k = 1 / (m1.k * this.scale);
-    f = 1 / (m1.f * this.scale);
+    f = 1 / (m1.f * this.scaley);
     if (bound) {
       bound = {
         x: (1 - m1.k) * this.width(),
